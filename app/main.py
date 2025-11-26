@@ -107,6 +107,7 @@ def report_detail(
     insight = build_insights(evaluation)
     chart_data = build_chart_payload(evaluation)
     chart_json = json.dumps(chart_data)
+    dimension_breakdown = build_dimension_breakdown(evaluation)
 
     return templates.TemplateResponse(
         "report_detail.html",
@@ -115,8 +116,20 @@ def report_detail(
             "evaluation": evaluation,
             "insight": insight,
             "chart_data": chart_json,
+            "dimension_breakdown": dimension_breakdown,
         },
     )
+
+
+@app.post("/reports/{evaluation_id}/delete")
+def delete_report(evaluation_id: int):
+    with session_scope() as session:
+        evaluation = session.get(Evaluation, evaluation_id)
+        if not evaluation:
+            raise HTTPException(status_code=404, detail="Evaluation not found")
+        session.delete(evaluation)
+
+    return RedirectResponse(url="/reports", status_code=303)
 
 
 @app.get("/framework")
@@ -185,3 +198,42 @@ def build_chart_payload(evaluation: Evaluation) -> dict:
         evaluation.learning_effectiveness,
     ]
     return {"labels": labels, "data": data}
+
+
+def build_dimension_breakdown(evaluation: Evaluation) -> List[dict]:
+    """Provide status metadata for each dimension so the template can render useful context."""
+    dimensions = [
+        ("Pedagogy", evaluation.pedagogical_design, "Are learning objectives scaffolded?"),
+        ("UI/UX", evaluation.ui_ux, "Interface clarity and accessibility"),
+        ("Engagement", evaluation.engagement, "Motivation, game loops, social cues"),
+        ("Technical", evaluation.technical_performance, "Performance, stability, and offline"),
+        ("Learning", evaluation.learning_effectiveness, "Evidence of mastery gains"),
+    ]
+
+    breakdown = []
+    for label, score, descriptor in dimensions:
+        if score >= 4:
+            tone = "strength"
+            status = "Strength"
+            note = "Learners consistently praise this dimension."
+        elif score >= 3:
+            tone = "steady"
+            status = "Stable"
+            note = "Working reliably; run small experiments to lift it."
+        else:
+            tone = "risk"
+            status = "Needs focus"
+            note = "Below expectation; prioritize fixes in the next sprint."
+
+        breakdown.append(
+            {
+                "label": label,
+                "score": score,
+                "descriptor": descriptor,
+                "tone": tone,
+                "status": status,
+                "note": note,
+            }
+        )
+
+    return breakdown

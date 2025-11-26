@@ -40,7 +40,19 @@
               <dd>{{ evaluation.learning_effectiveness }}/5</dd>
             </div>
           </dl>
-          <a href="/reports/{{ evaluation.id }}" class="btn secondary">Open report</a>
+          <div class="card-actions">
+            <a href="/reports/{{ evaluation.id }}" class="btn secondary">Open report</a>
+            <button
+              type="button"
+              class="btn danger ghost"
+              data-delete-trigger
+              data-target="delete-form-{{ evaluation.id }}"
+              data-app-name="{{ evaluation.app_name }}"
+            >
+              Delete
+            </button>
+          </div>
+          <form id="delete-form-{{ evaluation.id }}" method="post" action="/reports/{{ evaluation.id }}/delete"></form>
         </article>
       {% endfor %}
     {% else %}
@@ -50,4 +62,16 @@
     {% endif %}
   </div>
 </section>
+
+<div class="modal-backdrop is-hidden" id="delete-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <p class="eyebrow">Confirmation</p>
+    <h2 id="delete-modal-title">Delete this report?</h2>
+    <p class="muted" id="delete-modal-body">This action cannot be undone. The evaluation record and insights will be removed.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-modal-cancel>Keep report</button>
+      <button type="button" class="btn danger" data-modal-confirm>Delete</button>
+    </div>
+  </div>
+</div>
 {% endblock %}

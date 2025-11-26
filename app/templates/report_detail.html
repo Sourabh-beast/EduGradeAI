@@ -4,7 +4,7 @@
   window.addEventListener("load", () => {
     const ctx = document.getElementById("scoreChart");
     if (!ctx) return;
-    const payload = JSON.parse('{{ chart_data | safe }}');
+    const payload = {{ chart_data | safe }};
     new Chart(ctx, {
       type: "radar",
       data: {
@@ -21,11 +21,31 @@
         ],
       },
       options: {
+        plugins: {
+          legend: {
+            labels: {
+              color: "#c6cdff",
+            },
+          },
+        },
         scales: {
           r: {
             suggestedMin: 0,
             suggestedMax: 5,
-            ticks: { stepSize: 1 },
+            grid: {
+              color: "rgba(255, 255, 255, 0.12)",
+            },
+            angleLines: {
+              color: "rgba(255, 255, 255, 0.12)",
+            },
+            pointLabels: {
+              color: "#f5f6fb",
+            },
+            ticks: {
+              stepSize: 1,
+              color: "#a8b0d8",
+              backdropColor: "transparent",
+            },
           },
         },
       },
@@ -48,6 +68,21 @@
     <article class="card">
       <h3>Dimension breakdown</h3>
       <canvas id="scoreChart" width="400" height="300"></canvas>
+      <div class="dimension-breakdown">
+        {% for dim in dimension_breakdown %}
+          <div class="dimension-row">
+            <div>
+              <p class="dimension-label">{{ dim.label }} · <strong>{{ dim.score }}/5</strong></p>
+              <p class="muted">{{ dim.descriptor }}</p>
+            </div>
+            <span class="status-pill status-{{ dim.tone }}">{{ dim.status }}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" style="width: {{ (dim.score / 5 * 100)|round(0) }}%"></div>
+          </div>
+          <p class="muted">{{ dim.note }}</p>
+        {% endfor %}
+      </div>
     </article>
     <article class="card">
       <h3>Insight highlights</h3>
